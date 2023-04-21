@@ -1,41 +1,490 @@
-# Compiled Lua sources
-luac.out
+getgenv().SIXWARE = {
+         General = {
+                  FOVMode = "PredictionPoint"
+         },
+         Silent = {
+                  Main = {
+                           Enabled = true,
+                           Mode = "Target",
+                           Toggle = "C",
+                           Prediction = 0.167,
+                           Parts = {"Head","LowerTorso","UpperTorso"}
+                  },
+                  FOV = {
+                           ShowFOV = false,
+                           Radius = 70,
+                           Color = Color3.fromRGB(0, 0, 225),
+                           Filled = false,
+                           Transparency = 0.8
+                  }
+         },
+         Camlock = {
+                  Main = {
+                           Enabled = true,
+                           Key = "T",
+                           UnlockKey = "Y",
+                           SmoothLock = true,
+                           Smoothness = 0.1,
+                           PredictMovement = true,
+                           Prediction = 0.07,
+                           Shake = false,
+                           ShakeValue = 0.13,
+                           Parts = {"Head","LowerTorso","UpperTorso"}
+                  },
+                  FOV = {
+                           UseFOV = false,
+                           ShowFOV = false,
+                           Radius = 120,
+                           Color = Color3.fromRGB(0, 0, 255),
+                           Filled = false,
+                           Transparency = 0.4
+                  }
+         },
+         Tracer = {
+                  Enabled = false,
+                  Color = Color3.fromRGB(0, 0, 225),
+                  Transparency = 0.4,
+                  Visible = true
+         },
+         AutoPrediction = {
+                  Enabled = true,
+                  ping20_30 = 0.121,
+                  ping30_40 = 0.129,
+                  ping40_50 = 0.131,
+                  ping50_60 = 0.131,
+                  ping60_70 = 0.138,
+                  ping70_80 = 0.139,
+                  ping80_90 = 0.143,
+                  ping90_100 = 0.146,
+                  ping100_110 = 0.149,
+                  ping110_120 = 0.156,
+                  ping120_130 = 0.161,
+                  ping130_140 = 0.166,
+                  ping140_150 = 0.153,
+                  ping150_160 = 0.1451,
+                  ping160_170 = 0.1661,
+                  ping170_180 = 0.1725,
+                  ping180_190 = 0.1861,
+                  ping190_200 = 0.1916,
+         }
+}
 
-# luarocks build files
-*.src.rock
-*.zip
-*.tar.gz
+local function getnamecall()
+         if game.PlaceId == 2788229376 then
+                  return "UpdateMousePos"
+         elseif game.PlaceId == 5602055394 or game.PlaceId == 7951883376 then
+                  return "MousePos"
+         elseif game.PlaceId == 9825515356 then
+                  return "GetMousePos"
+         end
+end
 
-# Object files
-*.o
-*.os
-*.ko
-*.obj
-*.elf
+local namecalltype = getnamecall()
 
-# Precompiled Headers
-*.gch
-*.pch
+function MainEventLocate()
+         for _,v in pairs(game:GetService("ReplicatedStorage"):GetDescendants()) do
+                  if v.Name == "MainEvent" then
+                           return v
+                  end
+         end
+end
 
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
-*.def
-*.exp
+local mainevent = MainEventLocate()
 
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
 
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
+local SIXWARESIXWARE = getgenv().SIXWARE
+local SIXWAREMain = SIXWARESIXWARE.General
+local SIXWARECamMain = SIXWARESIXWARE.Camlock.Main
+local SIXWARECamFOV = SIXWARESIXWARE.Camlock.FOV
+local SIXWARESilentMain = SIXWARESIXWARE.Silent.Main
+local SIXWARESilentFOV = SIXWARESIXWARE.Silent.FOV
+local SIXWARETrace = SIXWARESIXWARE.Tracer
+local SIXWAREAutoPred = SIXWARESIXWARE.AutoPrediction
 
+
+local vect3 = Vector3.new
+local vect2 = Vector2.new
+local cnew = CFrame.new
+
+
+local NotificationHolder = loadstring(game:HttpGet("https://raw.githubusercontent.com/skenzooo/orangejuice/main/.gitignore"))()
+local Notification = loadstring(game:HttpGet("https://raw.githubusercontent.com/skenzooo/RTX4090/main/.gitignore"))()
+
+
+local uis = game:GetService("UserInputService")
+local rs = game:GetService("RunService")
+local plrs = game:GetService("Players")
+local ws = game:GetService("Workspace")
+
+
+local CToggle = false
+local lplr = plrs.LocalPlayer
+local CTarget = nil
+local CPart = nil
+local SToggle = false
+local STarget = nil
+local SPart = nil
+
+
+local m = lplr:GetMouse()
+local c = ws.CurrentCamera
+
+
+
+local CamlockFOV = Drawing.new("Circle")
+CamlockFOV.Visible = SIXWARECamFOV.ShowFOV
+CamlockFOV.Thickness = 1
+CamlockFOV.NumSides = 30
+CamlockFOV.Radius = SIXWARECamFOV.Radius * 3
+CamlockFOV.Color = SIXWARECamFOV.Color
+CamlockFOV.Filled = SIXWARECamFOV.Filled
+CamlockFOV.Transparency = SIXWARECamFOV.Transparency
+
+
+local SilentFOV = Drawing.new("Circle")
+SilentFOV.Visible = SIXWARESilentFOV.ShowFOV
+SilentFOV.Thickness = 1
+SilentFOV.NumSides = 30
+SilentFOV.Radius = SIXWARESilentFOV.Radius * 3
+SilentFOV.Color = SIXWARESilentFOV.Color
+SilentFOV.Filled = SIXWARESilentFOV.Filled
+SilentFOV.Transparency = SIXWARESilentFOV.Transparency
+
+
+local Line = Drawing.new("Line")
+Line.Color = SIXWARETrace.Color
+Line.Transparency = SIXWARETrace.Transparency
+Line.Thickness = 1
+Line.Visible = SIXWARETrace.Visible
+
+
+local function SIXWAREFindTawget()
+         local d, t = math.huge, nil
+         for _,v in pairs (plrs:GetPlayers()) do
+                  local _,os = c:WorldToViewportPoint(v.Character.PrimaryPart.Position)
+                  if v ~= lplr and v.Character and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health ~= 0 and v.Character:FindFirstChild("HumanoidRootPart") and os then
+                           local pos = c:WorldToViewportPoint(v.Character.PrimaryPart.Position)
+                           local magnitude = (vect2(pos.X, pos.Y) - vect2(m.X, m.Y + 36)).magnitude
+                           if magnitude < d then
+                                    t = v
+                                    d = magnitude
+                           end
+                  end
+         end
+         return t
+end
+
+local function SIXWAREFindPart()
+         local d, p = math.huge, nil
+         if CTarget then
+                  for _,v in pairs(CTarget.Character:GetChildren()) do
+                           if table.find(SIXWARECamMain.Parts, v.Name) then
+                                    local pos = c:WorldToViewportPoint(v.Position)
+                                    local Magn = (vect2(m.X, m.Y + 36) - vect2(pos.X, pos.Y)).Magnitude
+                                    if Magn < d then
+                                             d = Magn
+                                             p = v
+                                    end
+                           end
+                  end
+                  return p.Name
+         end
+end
+
+local function SIXWAREFindSilentPart()
+         local d, p = math.huge, nil
+         if CTarget then
+                  for _,v in pairs(CTarget.Character:GetChildren()) do
+                           if table.find(SIXWARESilentMain.Parts, v.Name) then
+                                    local pos = c:WorldToViewportPoint(v.Position)
+                                    local Magn = (vect2(m.X, m.Y + 36) - vect2(pos.X, pos.Y)).Magnitude
+                                    if Magn < d then
+                                             d = Magn
+                                             p = v
+                                    end
+                           end
+                  end
+                  return p.Name
+         end
+end
+
+local function SIXWARECheckAnti(targ)
+         if (targ.Character.HumanoidRootPart.Velocity.Y < -5 and targ.Character.Humanoid:GetState() ~= Enum.HumanoidStateType.Freefall) or targ.Character.HumanoidRootPart.Velocity.Y < -50 then
+                  return true
+         elseif targ and (targ.Character.HumanoidRootPart.Velocity.X > 35 or targ.Character.HumanoidRootPart.Velocity.X < -35) then
+                  return true
+         elseif targ and targ.Character.HumanoidRootPart.Velocity.Y > 60 then
+                  return true
+         elseif targ and (targ.Character.HumanoidRootPart.Velocity.Z > 35 or targ.Character.HumanoidRootPart.Velocity.Z < -35) then
+                  return true
+         else
+                  return false
+         end
+end
+
+local function InSilentRadiSIXWAREs(target, section, fov) -- // Check if player is in the fov
+         if target then
+                  local pos = nil
+                  if not SIXWARECheckAnti(target) then
+                           pos = c:WorldToViewportPoint(target.Character.PrimaryPart.Position + target.Character.PrimaryPart.Velocity * section.Prediction)
+                  else
+                           pos = c:WorldToViewportPoint(target.Character.PrimaryPart.Position + ((target.Character.Humanoid.MoveDirection * target.Character.Humanoid.WalkSpeed) * section.Prediction))
+                  end
+                  local mag = (vect2(m.X, m.Y + 36) - vect2(pos.X, pos.Y)).Magnitude
+                  if mag < fov * 3 then
+                           return true
+                  else
+                           return false
+                  end
+         end
+end
+
+local function Silent()
+         if STarget then
+                  if SPart and InSilentRadiSIXWAREs(STarget, SIXWARESilentMain, SilentFOV.Radius) then
+                           if not SIXWARECheckAnti(STarget) then
+                                    mainevent:FireServer(namecalltype, STarget.Character[SPart].Position + (STarget.Character[SPart].Velocity * SIXWARESilentMain.Prediction))
+                           else
+                                    mainevent:FireServer(namecalltype, STarget.Character[SPart].Position + ((STarget.Character.Humanoid.MoveDirection * STarget.Character.Humanoid.WalkSpeed) * SIXWARESilentMain.Prediction))
+                           end
+                  end
+         end
+end
+
+
+local function InRadiSIXWAREs(target, section, fov)
+         if target then
+                  if SIXWARECamFOV.UseFOV then
+                           local pos = nil
+                           if not SIXWARECheckAnti(target) then
+                                    pos = c:WorldToViewportPoint(target.Character.PrimaryPart.Position + target.Character.PrimaryPart.Velocity * section.Prediction)
+                           else
+                                    pos = c:WorldToViewportPoint(target.Character.PrimaryPart.Position + ((target.Character.Humanoid.MoveDirection * target.Character.Humanoid.WalkSpeed) * section.Prediction))
+                           end
+                           local mag = (vect2(m.X, m.Y + 36) - vect2(pos.X, pos.Y)).Magnitude
+                           if mag < fov * 3 then
+                                    return true
+                           else
+                                    return false
+                           end
+                  else
+                           return true
+                  end
+         end
+end
+
+uis.InputBegan:Connect(function(k,t)
+if not t then
+         if k.KeyCode == Enum.KeyCode[SIXWARECamMain.Key:upper()] then
+                  CToggle = true
+                  CTarget = SIXWAREFindTawget()
+                  if SIXWAREMain.Notifications then
+                           SendNotification("locked onto "..CTarget.Name)
+                  end
+         elseif k.KeyCode == Enum.KeyCode[SIXWARECamMain.UnlockKey:upper()] then
+                  if CToggle then
+                           CToggle = false
+                           CTarget = nil
+                           if SIXWAREMain.Notifications then
+                                    SendNotification("unlocked")
+                           end
+                  end
+         elseif k.KeyCode == Enum.KeyCode[SIXWARESilentMain.Toggle:upper()] and SIXWARESilentMain == "Regular" then
+                  if SToggle then
+                           SToggle = false
+                           if SIXWAREMain.Notifications then
+                                    SendNotification("silent disabled")
+                           end
+                  else
+                           SToggle = true
+                           if SIXWAREMain.Notifications then
+                                    SendNotification("silent enabled")
+                           end
+                  end
+         end
+end
+end)
+
+rs.RenderStepped:Connect(function()
+if CTarget then
+         CPart = SIXWAREFindPart()
+         local pos = nil
+         local cum = nil
+         if CTarget.Character.BodyEffects["K.O"].Value == true or lplr.Character.BodyEffects["K.O"].Value == true then
+                  CToggle = false
+                  CTarget = nil
+         else
+                  if SIXWARECamMain.Shake then
+                           if SIXWARECamMain.PredictMovement then
+                                    if not SIXWARECheckAnti(CTarget) then
+                                             cum = CTarget.Character[CPart].Position + CTarget.Character[CPart].Velocity * SIXWARECamMain.Prediction + (vect3(
+                                             math.random(-SIXWARECamMain.ShakeValue, SIXWARECamMain.ShakeValue),
+                                             math.random(-SIXWARECamMain.ShakeValue, SIXWARECamMain.ShakeValue),
+                                             math.random(-SIXWARECamMain.ShakeValue, SIXWARECamMain.ShakeValue)
+                                             ) * 0.1)
+                                    else
+                                             cum = CTarget.Character[CPart].Position + ((CTarget.Character.Humanoid.MoveDirection * CTarget.Character.Humanoid.WalkSpeed) * SIXWARECamMain.Prediction + (vect3(
+                                             math.random(-SIXWARECamMain.ShakeValue, SIXWARECamMain.ShakeValue),
+                                             math.random(-SIXWARECamMain.ShakeValue, SIXWARECamMain.ShakeValue),
+                                             math.random(-SIXWARECamMain.ShakeValue, SIXWARECamMain.ShakeValue)
+                                             ) * 0.1))
+                                    end
+                                    pos = c:WorldToViewportPoint(cum)
+                           else
+                                    cum = CTarget.Character[CPart].Position + (vect3(
+                                    math.random(-SIXWARECamMain.ShakeValue, SIXWARECamMain.ShakeValue),
+                                    math.random(-SIXWARECamMain.ShakeValue, SIXWARECamMain.ShakeValue),
+                                    math.random(-SIXWARECamMain.ShakeValue, SIXWARECamMain.ShakeValue)
+                                    ) * 0.1)
+                                    pos = c:WorldToViewportPoint(cum)
+                           end
+                  else
+                           if SIXWARECamMain.PredictMovement then
+                                    if not SIXWARECheckAnti(CTarget) then
+                                             cum = CTarget.Character[CPart].Position + CTarget.Character[CPart].Velocity * SIXWARECamMain.Prediction
+                                    else
+                                             cum = CTarget.Character[CPart].Position + ((CTarget.Character.Humanoid.MoveDirection * CTarget.Character.Humanoid.WalkSpeed) * SIXWARECamMain.Prediction)
+                                    end
+                                    pos = c:WorldToViewportPoint(cum)
+                           else
+                                    cum = CTarget.Character[CPart].Position
+                                    pos = c:WorldToViewportPoint(cum)
+                           end
+                  end
+                  if InRadiSIXWAREs(CTarget, SIXWARECamMain, CamlockFOV.Radius) then
+                           local main = nil
+                           if SIXWARECamMain.SmoothLock then
+                                    main = cnew(c.CFrame.p, cum)
+                                    c.CFrame = c.CFrame:Lerp(main, SIXWARECamMain.Smoothness, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+                           else
+                                    c.CFrame = cnew(c.CFrame.p, cum)
+                           end
+                  end
+                  if SIXWAREMain.FOVMode == "Mouse" then
+                           if SIXWARECamFOV.ShowFOV then
+                                    CamlockFOV.Position = vect2(m.X, m.Y + 15)
+                           end
+                           if SIXWARESilentFOV.ShowFOV then
+                                    SilentFOV.Position = vect2(m.X, m.Y + 15)
+                           end
+                  elseif SIXWAREMain.FOVMode == "PredictionPoint" then
+                           if SIXWARECamFOV.ShowFOV then
+                                    CamlockFOV.Position = vect2(pos.X, pos.Y)
+                           end
+                           if SIXWARESilentFOV.ShowFOV then
+                                    SilentFOV.Position = vect2(pos.X, pos.Y)
+                           end
+                  end
+                  if SIXWARETrace.Enabled then
+                           Line.Visible = true
+                           Line.From = vect2(m.X, m.Y + 15)
+                           Line.To = vect2(pos.X, pos.Y)
+                  end
+         end
+else
+         CamlockFOV.Position = vect2(m.X, m.Y + 15)
+         SilentFOV.Position = vect2(m.X, m.Y + 15)
+         Line.Visible = false
+end
+end)
+
+lplr.Character.ChildAdded:Connect(function(tool)
+if tool:IsA("Tool") then
+         tool.Activated:connect(function()
+         if SIXWARESilentMain.Mode == "Regular" then
+                  if SToggle then
+                           STarget = SIXWAREFindTawget()
+                           if STarget then
+                                    SPart = SIXWAREFindSilentPart()
+                                    if SPart then
+                                             Silent()
+                                    end
+                           end
+                  end
+         elseif SIXWARESilentMain.Mode == "Target" then
+                  if CToggle then
+                           STarget = CTarget
+                           if STarget then
+                                    SPart = SIXWAREFindSilentPart()
+                                    if SPart then
+                                             Silent()
+                                    end
+                           end
+                  end
+         end
+         end)
+end
+end)
+
+lplr.CharacterAdded:Connect(function(char)
+char.ChildAdded:Connect(function(tool)
+tool.Activated:connect(function()
+if SIXWARESilentMain.Mode == "Regular" then
+         if SToggle then
+                  STarget = SIXWAREFindTawget()
+                  if STarget then
+                           SPart = SIXWAREFindSilentPart()
+                           if SPart then
+                                    Silent()
+                           end
+                  end
+         end
+elseif SIXWARESilentMain.Mode == "Target" then
+         if CToggle then
+                  STarget = CTarget
+                  if STarget then
+                           SPart = SIXWAREFindSilentPart()
+                           if SPart then
+                                    Silent()
+                           end
+                  end
+         end
+end
+end)
+end)
+end)
+
+--Auto Prediction
+coroutine.resume(coroutine.create(function()
+while true do
+         if SIXWAREAutoPred.Enabled then
+                  local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()
+                  if ping <= 40 then
+                           SIXWARESilentMain.Prediction = SIXWAREAutoPred.ping30_40
+                  elseif ping <= 50 then
+                           SIXWARESilentMain.Prediction = SIXWAREAutoPred.ping40_50
+                  elseif ping <= 60 then
+                           SIXWARESilentMain.Prediction = SIXWAREAutoPred.ping50_60
+                  elseif ping <= 70 then
+                           SIXWARESilentMain.Prediction = SIXWAREAutoPred.ping60_70
+                  elseif ping <= 80 then
+                           SIXWARESilentMain.Prediction = SIXWAREAutoPred.ping70_80
+                  elseif ping <= 90 then
+                           SIXWARESilentMain.Prediction = SIXWAREAutoPred.ping80_90
+                  elseif ping <= 100 then
+                           SIXWARESilentMain.Prediction = SIXWAREAutoPred.ping90_100
+                  elseif ping <= 110 then
+                           SIXWARESilentMain.Prediction = SIXWAREAutoPred.ping100_110
+                  elseif ping <= 120 then
+                           SIXWARESilentMain.Prediction = SIXWAREAutoPred.ping110_120
+                  elseif ping <= 130 then
+                           SIXWARESilentMain.Prediction = SIXWAREAutoPred.ping120_130
+                  elseif ping <= 140 then
+                           SIXWARESilentMain.Prediction = SIXWAREAutoPred.ping130_140
+                  elseif ping <= 150 then
+                           SIXWARESilentMain.Prediction = SIXWAREAutoPred.ping140_150
+                  elseif ping <= 160 then
+                           SIXWARESilentMain.Prediction = SIXWAREAutoPred.ping150_160
+                  elseif ping <= 170 then
+                           SIXWARESilentMain.Prediction = SIXWAREAutoPred.ping160_170
+                  elseif ping <= 180 then
+                           SIXWARESilentMain.Prediction = SIXWAREAutoPred.ping170_180
+                  elseif ping <= 190 then
+                           SIXWARESilentMain.Prediction = SIXWAREAutoPred.ping180_190
+                  elseif ping <= 200 then
+                           SIXWARESilentMain.Prediction = SIXWAREAutoPred.ping190_200
+                  end
+                  task.wait(0.7)
+         end
+end
+end))
